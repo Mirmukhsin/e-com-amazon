@@ -83,9 +83,12 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public void setDefaultAddress(Long addressId) {
         Long currentUserId = securityUtils.getCurrentUserId();
-        Address currentAddress = addressRepository.findByUserIdAndIsDefault(currentUserId, true).orElseThrow(() -> new ResourceNotFoundException("Address not found"));
-        currentAddress.setIsDefault(false);
-        addressRepository.save(currentAddress);
+
+        addressRepository.findByUserIdAndIsDefault(currentUserId, true)
+                .ifPresent(currentDefault -> {
+                    currentDefault.setIsDefault(false);
+                    addressRepository.save(currentDefault);
+                });
 
         Address newAddress = addressRepository.findById(addressId).orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 

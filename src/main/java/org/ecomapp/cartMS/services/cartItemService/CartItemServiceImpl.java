@@ -73,6 +73,10 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     public CartItemResponseDTO updateCartItem(Long cartItemId, UpdateCartItemRequestDTO updateCartItemRequestDTO) {
         CartItem cartItem = cartItemRepository.findById(cartItemId).orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
+
+        if (cartItem.getProductVariant().getStockQuantity() < updateCartItemRequestDTO.getQuantity()) {
+            throw new ConflictException("Insufficient stock");
+        }
         cartItem.setQuantity(updateCartItemRequestDTO.getQuantity());
         cartItemRepository.save(cartItem);
 

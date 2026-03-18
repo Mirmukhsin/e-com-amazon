@@ -5,6 +5,8 @@ spring:
   application:
     name: E-com application (Amazon marketplace)
 
+# JPA - sql
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -13,13 +15,18 @@ spring:
       hibernate:
         format_sql: true
 
+# swagger - documentation
 
 springdoc:
   swagger-ui:
     path: "/swagger-ui.html"
+    operations-sorter: method
+    tags-sorter: alpha
   api-docs:
     path: "/v3/api-docs"
   show-actuator: true
+
+# stripe - payment
 
 stripe:
   secret:
@@ -27,10 +34,13 @@ stripe:
   webhook:
     secret: ${WEBHOOK_SECRET_KEY}
 
+# JWT - token
 
 jwt:
   secret: 4a7b9c2d8e3f1a6b5c0d9e4f7a2b8c3d6e1f4a7b9c2d8e3f1a6b5c0d9e4f7a2b
   expiration: 86400000
+
+# version
 
 server:
   servlet:

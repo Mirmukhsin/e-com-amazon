@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/refunds")
 @RequiredArgsConstructor
-@Tag(name = "17. Refunds", description = "Refund management")
+@Tag(name = "H Refunds", description = "Refund management")
 public class RefundController {
     private final RefundService refundService;
 

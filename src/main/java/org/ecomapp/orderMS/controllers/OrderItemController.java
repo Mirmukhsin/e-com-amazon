@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/orders/sub-orders")
 @RequiredArgsConstructor
-@Tag(name = "14. Order items", description = "Order item management")
+@Tag(name = "E. Order items", description = "Order item management")
 public class OrderItemController {
     private final OrderItemService orderItemService;
 

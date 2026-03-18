@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/users/me/address")
 @RequiredArgsConstructor
-@Tag(name = "Addresses", description = "User address management")
+@Tag(name = "3. Addresses", description = "User address management")
 public class AddressController {
     private final AddressService addressService;
 

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/webhooks")
 @RequiredArgsConstructor
-@Tag(name = "16. Webhooks", description = "Stripe webhook handling")
+@Tag(name = "G. Webhooks", description = "Stripe webhook handling")
 public class WebhookController {
     private final PaymentService paymentService;
 

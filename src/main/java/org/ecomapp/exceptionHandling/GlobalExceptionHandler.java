@@ -88,7 +88,7 @@ public class GlobalExceptionHandler {
         ErrorResponseDTO error = ErrorResponseDTO.builder()
                 .title("Validation error")
                 .status(400)
-                .detail(ex.getMessage())
+                .detail(message)
                 .path(req.getRequestURI())
                 .timestamp(Instant.now())
                 .build();
@@ -105,7 +105,7 @@ public class GlobalExceptionHandler {
                 .path(req.getRequestURI())
                 .timestamp(Instant.now())
                 .build();
-        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN );
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
 }

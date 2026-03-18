@@ -45,6 +45,9 @@ public class SecurityConfig {
                         "/v3/api-docs/**"
                 ).permitAll()
 
+                // h2
+                .requestMatchers("/h2/**").permitAll()
+
                 // product browsing
                 .requestMatchers(HttpMethod.GET,
                         "/products/**",
@@ -54,12 +57,16 @@ public class SecurityConfig {
 
                 // admin only
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/categories/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")
 
                 // seller only
-                .requestMatchers(HttpMethod.POST, "/products").hasRole("SELLER")
+                .requestMatchers(HttpMethod.POST, "/products/**").hasRole("SELLER")
                 .requestMatchers(HttpMethod.PATCH, "/products/**").hasRole("SELLER")
                 .requestMatchers(HttpMethod.DELETE, "/products/**").hasRole("SELLER")
-                .requestMatchers("/orders/sub-orders/*/status").hasRole("SELLER")
+                .requestMatchers("/orders/sub-orders/*/status", "/orders/sub-orders/me").hasRole("SELLER")
+                .requestMatchers("/seller/**").hasRole("SELLER")
 
                 // buyer only
                 .requestMatchers(
@@ -86,6 +93,23 @@ public class SecurityConfig {
         http.addFilterBefore(
                 jwtAuthFilter,
                 UsernamePasswordAuthenticationFilter.class
+        );
+
+        http.exceptionHandling(ex -> ex
+                .authenticationEntryPoint(
+                        (request, response, authException) -> {
+                            response.setStatus(401);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        }
+                )
+                .accessDeniedHandler(
+                        (request, response, accessDeniedException) -> {
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Access Denied\"}");
+                        }
+                )
         );
 
         return http.build();

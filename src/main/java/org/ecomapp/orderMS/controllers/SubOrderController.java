@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/orders/sub-orders")
 @RequiredArgsConstructor
-@Tag(name = "13. Sub orders", description = "Sub order management")
+@Tag(name = "D. Sub orders", description = "Sub order management")
 public class SubOrderController {
     private final SubOrderService subOrderService;
 
-    @Operation(summary = "Get sub order - SELLER only")
+    @Operation(summary = "Get sub order")
     @GetMapping("/{subOrderId}")
     public ResponseEntity<SubOrderResponseDTO> getSubOrder(@PathVariable Long subOrderId) {
         return new ResponseEntity<>(subOrderService.getSubOrder(subOrderId), HttpStatus.OK);

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/cart")
 @RequiredArgsConstructor
-@Tag(name = "10. Cart", description = "Shopping cart management")
+@Tag(name = "A. Cart", description = "Shopping cart management")
 public class CartController {
     private final CartService cartService;
 
