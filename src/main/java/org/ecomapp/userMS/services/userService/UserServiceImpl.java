@@ -12,7 +12,6 @@ import org.ecomapp.userMS.dtos.response.UserResponseDTO;
 import org.ecomapp.userMS.models.User;
 import org.ecomapp.userMS.repositories.UserRepository;
 import org.ecomapp.userMS.utility.UserMapper;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,18 +24,18 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
     @Override
     public UserResponseDTO getUserById() {
-        return userRepository.findById(CURRENT_USER_ID)
+        Long currentUserId = securityUtils.getCurrentUserId();
+
+        return userRepository.findById(currentUserId)
                 .map(userMapper::userToUserResponseDTO)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found by id: %d!".formatted(CURRENT_USER_ID)));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found by id: %d!".formatted(currentUserId)));
     }
 
     @Override
     public UserResponseDTO updateProfile(UpdateProfileRequestDTO updateDTO) {
-        User existedUser = userRepository.findById(CURRENT_USER_ID).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User existedUser = userRepository.findById(securityUtils.getCurrentUserId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (updateDTO.getFullName() != null) {
             existedUser.setFullName(updateDTO.getFullName());
@@ -52,7 +51,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public void changePassword(ChangePasswordRequestDTO changePswdDTO) {
-        User user = userRepository.findById(CURRENT_USER_ID).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findById(securityUtils.getCurrentUserId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         boolean matches = passwordEncoder.matches(changePswdDTO.getOldPassword(), user.getPassword());
         if (!matches) {
             throw new UnAuthorizedException("Invalid credentials!");
@@ -66,7 +65,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteAccount() {
-        User user = userRepository.findById(CURRENT_USER_ID).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
+        User user = userRepository.findById(securityUtils.getCurrentUserId()).orElseThrow(() -> new ResourceNotFoundException("User not found!"));
         userRepository.delete(user);
     }
 }

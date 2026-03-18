@@ -29,21 +29,20 @@ public class SellerServiceImpl implements SellerService {
     private final SellerMapper sellerMapper;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
     @Override
     public SellerResponseDTO getSeller() {
-        SellerProfile seller = sellerRepository.findByUserId(CURRENT_USER_ID).orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
+        SellerProfile seller = sellerRepository.findByUserId(securityUtils.getCurrentUserId()).orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
         return sellerMapper.sellerToSellerResDto(seller);
     }
 
     @Transactional
     @Override
     public SellerResponseDTO createSeller(SellerRequestDTO dto) {
+        Long currentUserId = securityUtils.getCurrentUserId();
 
-        User user = userRepository.findById(CURRENT_USER_ID).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        Boolean alreadyExists = sellerRepository.existsByUserId(CURRENT_USER_ID);
+        Boolean alreadyExists = sellerRepository.existsByUserId(currentUserId);
         if (alreadyExists) {
             throw new ConflictException("Seller profile already exists for this user");
         } else {
@@ -66,7 +65,7 @@ public class SellerServiceImpl implements SellerService {
 
     @Override
     public SellerResponseDTO updateSeller(SellerRequestDTO dto) {
-        SellerProfile seller = sellerRepository.findByUserId(CURRENT_USER_ID).orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
+        SellerProfile seller = sellerRepository.findByUserId(securityUtils.getCurrentUserId()).orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
 
         seller.setStoreName(dto.getStoreName());
         seller.setStoreDescription(dto.getStoreDescription());

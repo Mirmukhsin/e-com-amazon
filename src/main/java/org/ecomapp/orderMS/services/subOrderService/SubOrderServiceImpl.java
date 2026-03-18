@@ -33,8 +33,6 @@ public class SubOrderServiceImpl implements SubOrderService {
     private final OrderMapper orderMapper;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
     @Override
     public SubOrderResponseDTO getSubOrder(Long subOrderId) {
 
@@ -52,7 +50,7 @@ public class SubOrderServiceImpl implements SubOrderService {
     public Page<SubOrderResponseDTO> getSellerSubOrders(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<SubOrderResponseDTO> subOrderResponseDTOPage = subOrderRepository.findAllBySeller_Id(CURRENT_USER_ID, pageable).map(orderMapper::subOrderToSubOrderResDto);
+        Page<SubOrderResponseDTO> subOrderResponseDTOPage = subOrderRepository.findAllBySeller_Id(securityUtils.getCurrentUserId(), pageable).map(orderMapper::subOrderToSubOrderResDto);
 
         List<Long> subOrdersIds = subOrderResponseDTOPage.stream().map(SubOrderResponseDTO::getId).toList();
 

@@ -58,18 +58,18 @@ public class OrderServiceImpl implements OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
     @Override
     public Page<OrderResponseDTO> getUserOrders(OrderStatus orderStatus, int page, int size) {
+        Long currentUserId = securityUtils.getCurrentUserId();
+
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Order> orders;
 
         if (orderStatus != null) {
-            orders = orderRepository.findAllByBuyer_IdAndStatus(CURRENT_USER_ID, orderStatus, pageable);
+            orders = orderRepository.findAllByBuyer_IdAndStatus(currentUserId, orderStatus, pageable);
         } else {
-            orders = orderRepository.findAllByBuyer_Id(CURRENT_USER_ID, pageable);
+            orders = orderRepository.findAllByBuyer_Id(currentUserId, pageable);
         }
 
         List<Long> orderIds = orders.stream().map(Order::getId).toList();
@@ -89,7 +89,7 @@ public class OrderServiceImpl implements OrderService {
         // TODO: Order
         Order order = orderRepository.findById(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (!Objects.equals(order.getBuyer().getId(), CURRENT_USER_ID)) {
+        if (!Objects.equals(order.getBuyer().getId(), securityUtils.getCurrentUserId())) {
             throw new UnAuthorizedException("Invalid credentials");
         } else {
 
@@ -114,18 +114,19 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public OrderResponseDTO createOrder(CheckoutRequestDTO checkoutRequestDTO) {
+        Long currentUserId = securityUtils.getCurrentUserId();
 
         Long cartId = checkoutRequestDTO.getCartId();
 
         Cart cart = cartRepository.findById(cartId).orElseThrow(() -> new ResourceNotFoundException("Cart not found"));
 
-        if (!cart.getUser().getId().equals(CURRENT_USER_ID)) {
+        if (!cart.getUser().getId().equals(currentUserId)) {
             throw new UnAuthorizedException("Invalid credentials");
         }
 
         Address address = addressRepository.findById(checkoutRequestDTO.getAddressId()).orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
-        if (!address.getUser().getId().equals(CURRENT_USER_ID)) {
+        if (!address.getUser().getId().equals(currentUserId)) {
             throw new UnAuthorizedException("Invalid credentials");
         }
 

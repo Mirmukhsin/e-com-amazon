@@ -26,8 +26,6 @@ public class CartServiceImpl implements CartService {
     private final CartMapper cartMapper;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
     @Override
     public CartResponseDTO getCart(Long cartId) {
         // TODO: For cart response -> id, userid, items, total items, total price
@@ -57,12 +55,13 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponseDTO createCart() {
-        boolean isCartExists = cartRepository.existsByUser_Id(CURRENT_USER_ID);
+        Long currentUserId = securityUtils.getCurrentUserId();
+        boolean isCartExists = cartRepository.existsByUser_Id(currentUserId);
         if (isCartExists) {
             throw new ConflictException("User already has a cart");
         } else {
 
-            User user = userRepository.findById(CURRENT_USER_ID).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            User user = userRepository.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
             Cart cart = Cart.builder().user(user).build();
             cartRepository.save(cart);
 

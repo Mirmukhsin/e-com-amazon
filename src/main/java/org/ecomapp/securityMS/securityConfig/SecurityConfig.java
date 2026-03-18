@@ -30,46 +30,48 @@ public class SecurityConfig {
 
 
         http.authorizeHttpRequests(authorize -> authorize
+
                 // public
                 .requestMatchers(
                         "/auth/register",
                         "/auth/login",
-                        "/webhook/stripe"
-                ).permitAll()
-
-                // product browsing
-                .requestMatchers(HttpMethod.GET,
-                        "/product/**",
-                        "/category/**",
-                        "/review/**"
+                        "/webhooks/stripe"
                 ).permitAll()
 
                 // swagger
                 .requestMatchers(
                         "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/swagger-ui.html"
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**"
+                ).permitAll()
+
+                // product browsing
+                .requestMatchers(HttpMethod.GET,
+                        "/products/**",
+                        "/categories/**",
+                        "/reviews/**"
                 ).permitAll()
 
                 // admin only
                 .requestMatchers("/admin/**").hasRole("ADMIN")
 
                 // seller only
-                .requestMatchers(HttpMethod.POST, "/product").hasRole("SELLER")
-                .requestMatchers(HttpMethod.PATCH, "/product/**").hasRole("SELLER")
-                .requestMatchers(HttpMethod.DELETE, "/product/**").hasRole("SELLER")
-                .requestMatchers("/sub/order/**/status").hasRole("SELLER")
+                .requestMatchers(HttpMethod.POST, "/products").hasRole("SELLER")
+                .requestMatchers(HttpMethod.PATCH, "/products/**").hasRole("SELLER")
+                .requestMatchers(HttpMethod.DELETE, "/products/**").hasRole("SELLER")
+                .requestMatchers("/orders/sub-orders/*/status").hasRole("SELLER")
 
                 // buyer only
                 .requestMatchers(
                         "/cart/**",
-                        "/order/**",
-                        "/payment/**",
-                        "/refund/**request/**"
+                        "/orders/**",
+                        "/payments/**"
                 ).hasRole("BUYER")
 
-                // admin or seller
-                .requestMatchers("/refund/**/status").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/refunds/sub-orders/**").hasRole("BUYER")
+
+                // admin - refund approval
+                .requestMatchers(HttpMethod.PATCH, "/refunds/*/status").hasRole("ADMIN")
 
                 .anyRequest().authenticated());
 

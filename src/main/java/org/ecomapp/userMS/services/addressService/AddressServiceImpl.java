@@ -24,11 +24,10 @@ public class AddressServiceImpl implements AddressService {
     private final AddressMapper addressMapper;
     private final SecurityUtils securityUtils;
 
-    private final Long currentUserId = securityUtils.getCurrentUserId();
-
     @Transactional
     @Override
     public AddressResponseDTO createAddress(AddressRequestDTO addressReqDTO) {
+        Long currentUserId = securityUtils.getCurrentUserId();
         User user = userRepository.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (addressReqDTO.getIsDefault()) {
@@ -49,7 +48,7 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponseDTO updateAddress(Long addressId, AddressRequestDTO updateDTO) {
         Address address = addressRepository.findById(addressId).orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
-        if (!address.getUser().getId().equals(currentUserId)) {
+        if (!address.getUser().getId().equals(securityUtils.getCurrentUserId())) {
             throw new UnAuthorizedException("Unauthorized");
         }
         address.setLabel(updateDTO.getLabel());
@@ -67,7 +66,7 @@ public class AddressServiceImpl implements AddressService {
     public void deleteAddress(Long addressId) {
         Address address = addressRepository.findById(addressId).orElseThrow(() -> new ResourceNotFoundException("Address not found"));
 
-        if (!address.getUser().getId().equals(currentUserId)) {
+        if (!address.getUser().getId().equals(securityUtils.getCurrentUserId())) {
             throw new UnAuthorizedException("Unauthorized");
         } else {
             addressRepository.deleteById(addressId);
@@ -83,6 +82,7 @@ public class AddressServiceImpl implements AddressService {
     @Transactional
     @Override
     public void setDefaultAddress(Long addressId) {
+        Long currentUserId = securityUtils.getCurrentUserId();
         Address currentAddress = addressRepository.findByUserIdAndIsDefault(currentUserId, true).orElseThrow(() -> new ResourceNotFoundException("Address not found"));
         currentAddress.setIsDefault(false);
         addressRepository.save(currentAddress);

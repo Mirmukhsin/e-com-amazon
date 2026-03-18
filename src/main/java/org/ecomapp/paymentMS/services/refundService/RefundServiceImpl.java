@@ -32,8 +32,6 @@ public class RefundServiceImpl implements RefundService {
     private final StripeService stripeService;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
 
     @Override
     public RefundResponseDTO getRefund(Long refundId) {
@@ -44,7 +42,7 @@ public class RefundServiceImpl implements RefundService {
     @Override
     public RefundResponseDTO requestRefund(Long subOrderId, RefundRequestDTO refundRequestDTO) {
         SubOrder subOrder = subOrderRepository.findById(subOrderId).orElseThrow(() -> new ResourceNotFoundException("Sub order not found"));
-        if (!subOrder.getOrder().getBuyer().getId().equals(CURRENT_USER_ID)) {
+        if (!subOrder.getOrder().getBuyer().getId().equals(securityUtils.getCurrentUserId())) {
             throw new UnAuthorizedException("Unauthorized");
         }
 

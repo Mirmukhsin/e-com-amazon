@@ -23,7 +23,6 @@ import org.ecomapp.securityMS.utility.SecurityUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -38,15 +37,13 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentMapper paymentMapper;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
     @Transactional
     @Override
     public PaymentResponseDTO initiatePayment(Long orderId, PaymentRequestDTO paymentRequestDTO) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
-        if (!order.getBuyer().getId().equals(CURRENT_USER_ID)) {
+        if (!order.getBuyer().getId().equals(securityUtils.getCurrentUserId())) {
             throw new UnAuthorizedException("Unauthorized");
         }
         if (!order.getStatus().equals(OrderStatus.PENDING)) {
@@ -117,7 +114,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public Page<PaymentResponseDTO> getUserPayments(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return paymentRepository.findAllByBuyer_Id(CURRENT_USER_ID, pageable).map(paymentMapper::paymentToPaymentResDto);
+        return paymentRepository.findAllByBuyer_Id(securityUtils.getCurrentUserId(), pageable).map(paymentMapper::paymentToPaymentResDto);
     }
 
     private String extractPaymentIntentId(Event event) {

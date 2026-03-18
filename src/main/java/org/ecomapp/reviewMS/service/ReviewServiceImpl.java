@@ -33,8 +33,6 @@ public class ReviewServiceImpl implements ReviewService {
     private final OrderItemRepository orderItemRepository;
     private final SecurityUtils securityUtils;
 
-    private final Long CURRENT_USER_ID = securityUtils.getCurrentUserId();
-
     @Override
     public Page<ReviewResponseDTO> getAllReviews(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -95,7 +93,7 @@ public class ReviewServiceImpl implements ReviewService {
     public ReviewResponseDTO updateReview(Long reviewId, UpdateReviewRequestDTO updateReviewRequestDTO) {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new ResourceNotFoundException("Review not found"));
 
-        if (!review.getBuyer().getId().equals(CURRENT_USER_ID)) {
+        if (!review.getBuyer().getId().equals(securityUtils.getCurrentUserId())) {
             throw new UnAuthorizedException("Unauthorized");
         }
 
