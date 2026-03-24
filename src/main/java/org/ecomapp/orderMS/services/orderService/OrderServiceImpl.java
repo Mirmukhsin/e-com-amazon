@@ -34,7 +34,6 @@ import org.ecomapp.userMS.utility.AddressMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -91,24 +90,25 @@ public class OrderServiceImpl implements OrderService {
 
         if (!Objects.equals(order.getBuyer().getId(), securityUtils.getCurrentUserId())) {
             throw new UnAuthorizedException("Invalid credentials");
-        } else {
-
-            // TODO: sub order of an Order
-            List<SubOrderResponseDTO> subOrderResponseDTOS = subOrderRepository.findAllByOrder_Id(orderId).stream().map(orderMapper::subOrderToSubOrderResDto).toList();
-
-            for (SubOrderResponseDTO subOrderResponseDTO : subOrderResponseDTOS) {
-
-                // TODO: items of a sub order
-                List<OrderItemResponseDTO> items = orderItemRepository.findAllBySubOrder_Id(subOrderResponseDTO.getId()).stream().map(orderMapper::orderItemToOrderItemResDto).toList();
-
-                subOrderResponseDTO.setItems(items);
-            }
-
-            OrderResponseDTO orderResponseDTO = orderMapper.orderToOrderResDto(order);
-            orderResponseDTO.setSubOrders(subOrderResponseDTOS);
-
-            return orderResponseDTO;
         }
+
+
+        List<SubOrder> subOrders = subOrderRepository.findAllByOrder_Id(orderId);
+
+        List<SubOrderResponseDTO> subOrderResponseDTOS = subOrders.stream().map(subOrder -> {
+            SubOrderResponseDTO dto = orderMapper.subOrderToSubOrderResDto(subOrder);
+
+            List<OrderItemResponseDTO> items = orderItemRepository.findAllBySubOrder_Id(subOrder.getId()).stream().map(orderMapper::orderItemToOrderItemResDto).toList();
+
+            dto.setItems(items);
+
+            return dto;
+        }).toList();
+
+        OrderResponseDTO orderResponseDTO = orderMapper.orderToOrderResDto(order);
+        orderResponseDTO.setSubOrders(subOrderResponseDTOS);
+
+        return orderResponseDTO;
     }
 
     @Transactional

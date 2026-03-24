@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
+@Table(name = "seller_profiles")
 @Getter
 @Setter
 @Builder
@@ -22,7 +23,7 @@ public class SellerProfile {
 
     private Double averageRating;
 
-    private Long totalSales;
+    private Integer totalSales;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false)

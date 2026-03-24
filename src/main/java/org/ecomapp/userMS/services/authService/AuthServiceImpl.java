@@ -6,6 +6,10 @@ import org.ecomapp.exceptionHandling.customExceptions.ConflictException;
 import org.ecomapp.exceptionHandling.customExceptions.ResourceNotFoundException;
 import org.ecomapp.exceptionHandling.customExceptions.UnAuthorizedException;
 import org.ecomapp.securityMS.jwtConfig.JWTService;
+import org.ecomapp.securityMS.jwtConfig.LogoutRequestDTO;
+import org.ecomapp.securityMS.jwtConfig.refreshToken.RefreshToken;
+import org.ecomapp.securityMS.jwtConfig.refreshToken.RefreshTokenRequestDTO;
+import org.ecomapp.securityMS.jwtConfig.refreshToken.service.RefreshTokenService;
 import org.ecomapp.userMS.dtos.request.LoginRequestDTO;
 import org.ecomapp.userMS.dtos.request.RegisterRequestDTO;
 import org.ecomapp.userMS.dtos.response.LoginResponseDTO;
@@ -29,6 +33,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final JWTService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
 
     @Transactional
@@ -51,21 +56,51 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        User user = userRepository.findByEmail(loginRequestDTO.getEmail()).orElseThrow(() -> new UnAuthorizedException("Invalid credentials"));
+        User user = userRepository.findByEmail(loginRequestDTO.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("Invalid credentials"));
+
         boolean matches = passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword());
+
         if (!matches) {
             throw new UnAuthorizedException("Invalid credentials");
         } else if (user.getStatus() == UserStatus.BANNED) {
-            throw new ConflictException("Your account has been banned");
+            throw new UnAuthorizedException("Your account has been banned");
         } else {
 
-            String jwtToken = jwtService.generateToken(user);
+            String accessToken = jwtService.generateToken(user);
+
+            RefreshToken refreshToken = refreshTokenService.generateRefreshToken(user);
 
             return LoginResponseDTO.builder()
-                    .token(jwtToken)
-                    .tokenType("Bearer")
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken.getToken())
                     .user(userMapper.userToUserResponseDTO(user))
                     .build();
         }
+    }
+
+    @Override
+    public LoginResponseDTO refresh(RefreshTokenRequestDTO dto) {
+        RefreshToken refreshToken = refreshTokenService.validateRefreshToken(dto.getRefreshToken());
+
+        User user = refreshToken.getUser();
+
+        refreshTokenService.revokeRefreshToken(dto.getRefreshToken());
+
+        String newAccessToken = jwtService.generateToken(user);
+
+        RefreshToken newRefreshToken = refreshTokenService.generateRefreshToken(user);
+
+        return LoginResponseDTO.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken.getToken())
+                .user(userMapper.userToUserResponseDTO(user))
+                .build();
+
+    }
+
+    @Override
+    public void logout(LogoutRequestDTO dto) {
+        refreshTokenService.revokeRefreshToken(dto.getRefreshToken());
     }
 }

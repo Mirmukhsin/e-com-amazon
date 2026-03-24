@@ -5,6 +5,7 @@ import lombok.*;
 import org.ecomapp.userMS.enums.Label;
 
 @Entity
+@Table(name = "addresses")
 @Getter
 @Setter
 @Builder

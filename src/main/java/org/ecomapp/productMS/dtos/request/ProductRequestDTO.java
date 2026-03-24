@@ -21,6 +21,4 @@ public class ProductRequestDTO {
 
     @NotNull(message = "Category is required")
     private Long categoryId;
-
-    private Long sellerId;
 }

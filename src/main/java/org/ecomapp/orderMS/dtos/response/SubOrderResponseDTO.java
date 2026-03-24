@@ -1,8 +1,6 @@
 package org.ecomapp.orderMS.dtos.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.ecomapp.orderMS.enums.SubOrderStatus;
 
 import java.util.List;
@@ -10,6 +8,8 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SubOrderResponseDTO {
 
     private Long id;

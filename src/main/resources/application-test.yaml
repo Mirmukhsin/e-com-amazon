@@ -13,5 +13,16 @@ spring:
       path: /h2
       enabled: true
 
+  jpa:
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+
+stripe:
+  secret:
+        key: ${STRIPE_SECRET_KEY}
+  webhook:
+        secret: ${WEBHOOK_SECRET_KEY}
 server:
   port: 8080

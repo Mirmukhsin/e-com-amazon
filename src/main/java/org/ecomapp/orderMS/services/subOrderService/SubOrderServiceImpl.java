@@ -16,6 +16,8 @@ import org.ecomapp.orderMS.repositories.OrderRepository;
 import org.ecomapp.orderMS.repositories.SubOrderRepository;
 import org.ecomapp.orderMS.utility.OrderMapper;
 import org.ecomapp.securityMS.utility.SecurityUtils;
+import org.ecomapp.userMS.models.SellerProfile;
+import org.ecomapp.userMS.repositories.SellerRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +32,7 @@ public class SubOrderServiceImpl implements SubOrderService {
     private final SubOrderRepository subOrderRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
+    private final SellerRepository sellerRepository;
     private final OrderMapper orderMapper;
     private final SecurityUtils securityUtils;
 
@@ -89,6 +92,10 @@ public class SubOrderServiceImpl implements SubOrderService {
         subOrder.setStatus(subOrderStatus);
         subOrderRepository.save(subOrder);
 
+        if (subOrderStatus.equals(SubOrderStatus.DELIVERED)) {
+            updateSellerTotalSales(subOrder);
+        }
+
         List<SubOrder> subOrders = subOrderRepository.findAllByOrder_Id(subOrder.getOrder().getId());
         boolean allDelivered = subOrders.stream().allMatch(subOrder1 -> subOrder1.getStatus().equals(SubOrderStatus.DELIVERED));
 
@@ -99,5 +106,17 @@ public class SubOrderServiceImpl implements SubOrderService {
         }
 
         return orderMapper.subOrderToSubOrderResDto(subOrder);
+    }
+
+    private void updateSellerTotalSales(SubOrder subOrder) {
+        List<OrderItem> orderItems = orderItemRepository.findAllBySubOrder_Id(subOrder.getId());
+
+        int totalQuantity = orderItems.stream().mapToInt(OrderItem::getQuantity).sum();
+
+        SellerProfile sellerProfile = sellerRepository.findByUserId(subOrder.getSeller().getId()).orElseThrow(() -> new ResourceNotFoundException("Seller profile not found"));
+
+        sellerProfile.setTotalSales(sellerProfile.getTotalSales() + totalQuantity);
+
+        sellerRepository.save(sellerProfile);
     }
 }

@@ -1,19 +1,25 @@
 spring:
   profiles:
-    active: test
+    active: dev
 
   application:
     name: E-com application (Amazon marketplace)
 
-# JPA - sql
+  # JPA - sql
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+
 
 # swagger - documentation
 
@@ -37,8 +43,9 @@ stripe:
 # JWT - token
 
 jwt:
-  secret: 4a7b9c2d8e3f1a6b5c0d9e4f7a2b8c3d6e1f4a7b9c2d8e3f1a6b5c0d9e4f7a2b
-  expiration: 86400000
+  secret: ${JWT_SECRET}
+  #  secret: 4a7b9c2d8e3f1a6b5c0d9e4f7a2b8c3d6e1f4a7b9c2d8e3f1a6b5c0d9e4f7a2b
+  expiration: 900000
 
 # version
 

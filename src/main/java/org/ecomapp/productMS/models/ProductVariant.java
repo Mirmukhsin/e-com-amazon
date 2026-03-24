@@ -19,7 +19,7 @@ public class ProductVariant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false,unique = true)
+    @Column(nullable = false, unique = true)
     private String sku;
 
     @Column(nullable = false)
@@ -30,9 +30,11 @@ public class ProductVariant {
 
     @ElementCollection
     @CollectionTable(name = "variant_attributes", joinColumns = @JoinColumn(name = "variant_id"))
-    private Map<String,String> attributes;
+    @MapKeyColumn(name = "attribute_key")
+    @Column(name = "attribute_value")
+    private Map<String, String> attributes;
 
     @ManyToOne
-    @JoinColumn(name = "product_id",nullable = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 }

@@ -1,8 +1,6 @@
 package org.ecomapp.orderMS.dtos.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.ecomapp.orderMS.enums.OrderStatus;
 import org.ecomapp.userMS.dtos.response.AddressSnapshotDTO;
 
@@ -12,6 +10,8 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderResponseDTO {
 
     private Long id;

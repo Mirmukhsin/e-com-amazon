@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ecomapp.exceptionHandling.ErrorResponseDTO;
+import org.ecomapp.securityMS.jwtConfig.LogoutRequestDTO;
+import org.ecomapp.securityMS.jwtConfig.refreshToken.RefreshTokenRequestDTO;
 import org.ecomapp.userMS.dtos.request.LoginRequestDTO;
 import org.ecomapp.userMS.dtos.request.RegisterRequestDTO;
 import org.ecomapp.userMS.dtos.response.LoginResponseDTO;
@@ -54,5 +56,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
         return new ResponseEntity<>(authService.login(loginRequestDTO), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Refresh token")
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponseDTO> refresh(@Valid @RequestBody RefreshTokenRequestDTO dto) {
+        return new ResponseEntity<>(authService.refresh(dto), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Logout")
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequestDTO dto) {
+        authService.logout(dto);
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

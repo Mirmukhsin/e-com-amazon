@@ -5,10 +5,13 @@ spring:
 
 
   datasource:
-    url: 'jdbc:postgresql://localhost:5432/eComDB'
+    url: 'jdbc:postgresql://localhost:5432/ecomdb'
+#    url: 'jdbc:postgresql://db:5432/ecomdb'
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 server:
   port: 9090

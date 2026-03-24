@@ -11,6 +11,7 @@ import org.ecomapp.productMS.models.Product;
 import org.ecomapp.productMS.repositories.CategoryRepository;
 import org.ecomapp.productMS.repositories.ProductRepository;
 import org.ecomapp.productMS.utility.ProductMapper;
+import org.ecomapp.securityMS.utility.SecurityUtils;
 import org.ecomapp.userMS.models.User;
 import org.ecomapp.userMS.repositories.UserRepository;
 import org.springframework.data.domain.Page;
@@ -25,6 +26,7 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final ProductMapper productMapper;
+    private final SecurityUtils securityUtils;
 
     @Override
     public Page<ProductResponseDTO> getAllProducts(int page, int size) {
@@ -64,11 +66,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional
     @Override
-    // TODO: SellerId in the dto should removed. it will came from JWT token
     public ProductResponseDTO create(ProductRequestDTO productRequestDTO) {
 
         Category category = categoryRepository.findById(productRequestDTO.getCategoryId()).orElseThrow(() -> new ResourceNotFoundException("Category not found"));
-        User seller = userRepository.findById(productRequestDTO.getSellerId()).orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+        User seller = userRepository.findById(securityUtils.getCurrentUserId()).orElseThrow(() -> new ResourceNotFoundException("Seller not found"));
 
         Product product = productMapper.productReqDtoToProduct(productRequestDTO);
 

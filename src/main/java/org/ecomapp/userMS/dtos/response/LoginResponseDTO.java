@@ -8,7 +8,9 @@ import lombok.Setter;
 @Setter
 @Builder
 public class LoginResponseDTO {
-    private String token;
+    private String accessToken;
+    private String refreshToken;
+    @Builder.Default
     private String tokenType = "Bearer";
     private UserResponseDTO user;
 }

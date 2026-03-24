@@ -35,6 +35,8 @@ public class SecurityConfig {
                 .requestMatchers(
                         "/auth/register",
                         "/auth/login",
+                        "/auth/refresh",
+                        "/auth/logout",
                         "/webhooks/stripe"
                 ).permitAll()
 
