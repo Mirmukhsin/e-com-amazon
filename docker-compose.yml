@@ -1,0 +1,302 @@
+services:
+  postgres:
+    container_name: postgres-container
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - eCom-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  config-server:
+    container_name: config-server-container
+    build:
+      context: ./Config Server
+      dockerfile: Dockerfile
+    image: e-com/config-server:v1
+    ports:
+      - "8888:8888"
+    networks:
+      - eCom-net
+    environment:
+      #      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      GIT_URI: ${GIT_URI}
+      GIT_USER: ${GIT_USER}
+      GIT_TOKEN: ${GIT_TOKEN}
+      ENCRYPT_KEY: ${ENCRYPT_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  eureka-service:
+    container_name: eureka-service-container
+    build:
+      context: ./Eureka Service
+      dockerfile: Dockerfile
+    image: e-com/eureka-service:v1
+    ports:
+      - "8761:8761"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  api-gateway-service:
+    container_name: api-gateway-service-container
+    build:
+      context: ./API Gateway Service
+      dockerfile: Dockerfile
+    image: e-com/api-gateway-service:v1
+    ports:
+      - "8080:8080"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  auth-service:
+    container_name: auth-service-container
+    build:
+      context: ./Auth Service
+      dockerfile: Dockerfile
+    image: e-com/auth-service:v1
+    ports:
+      - "8585:8585"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8585/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  user-service:
+    container_name: user-service-container
+    build:
+      context: ./User Service
+      dockerfile: Dockerfile
+    image: e-com/user-service:v1
+    ports:
+      - "8787:8787"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8787/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  product-service:
+    container_name: product-service-container
+    build:
+      context: ./Product service
+      dockerfile: Dockerfile
+    image: e-com/product-service:v1
+    ports:
+      - "8989:8989"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8989/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  cart-service:
+    container_name: cart-service-container
+    build:
+      context: ./Cart Service
+      dockerfile: Dockerfile
+    image: e-com/cart-service:v1
+    ports:
+      - "9099:9099"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9090/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  order-service:
+    container_name: order-service-container
+    build:
+      context: ./Order Service
+      dockerfile: Dockerfile
+    image: e-com/order-service:v1
+    ports:
+      - "9393:9393"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9393/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+
+  payment-service:
+    container_name: payment-service-container
+    build:
+      context: ./Payment Service
+      dockerfile: Dockerfile
+    image: e-com/payment-service:v1
+    ports:
+      - "9595:9595"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+      api-gateway-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9595/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  review-service:
+    container_name: review-service-container
+    build:
+      context: ./Review Service
+      dockerfile: Dockerfile
+    image: e-com/review-service:v1
+    ports:
+      - "9797:9797"
+    networks:
+      - eCom-net
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    depends_on:
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      eureka-service:
+        condition: service_healthy
+      api-gateway-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9797/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+networks:
+  eCom-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
