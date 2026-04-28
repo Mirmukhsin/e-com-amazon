@@ -3,27 +3,29 @@ package org.ecomapp.orderservice.services.orderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.ecomapp.orderservice.clients.CartMSClient;
+import org.ecomapp.orderservice.clients.ProductMSClient;
+import org.ecomapp.orderservice.clients.UserMSClient;
 import org.ecomapp.orderservice.dtos.clientsDTOs.CartItemDTO;
 import org.ecomapp.orderservice.dtos.clientsDTOs.OderDTOForPayment;
 import org.ecomapp.orderservice.dtos.clientsDTOs.ProductVariantDTO;
 import org.ecomapp.orderservice.dtos.clientsDTOs.ReserveStockRequest;
+import org.ecomapp.orderservice.dtos.clientsDTOs.addressDTOs.AddressDTO;
+import org.ecomapp.orderservice.dtos.clientsDTOs.addressDTOs.AddressSnapshotDTO;
 import org.ecomapp.orderservice.dtos.request.CheckoutRequestDTO;
 import org.ecomapp.orderservice.dtos.response.OrderItemResponseDTO;
 import org.ecomapp.orderservice.dtos.response.OrderResponseDTO;
 import org.ecomapp.orderservice.dtos.response.SubOrderResponseDTO;
-import org.ecomapp.orderservice.dtos.clientsDTOs.addressDTOs.AddressDTO;
-import org.ecomapp.orderservice.dtos.clientsDTOs.addressDTOs.AddressSnapshotDTO;
 import org.ecomapp.orderservice.enums.OrderStatus;
 import org.ecomapp.orderservice.enums.SubOrderStatus;
 import org.ecomapp.orderservice.exceptionHandling.customExceptions.ConflictException;
 import org.ecomapp.orderservice.exceptionHandling.customExceptions.ResourceNotFoundException;
 import org.ecomapp.orderservice.exceptionHandling.customExceptions.UnAuthorizedException;
+import org.ecomapp.orderservice.messaging.ClearCartDTO;
+import org.ecomapp.orderservice.messaging.MessageProducer;
 import org.ecomapp.orderservice.models.Order;
 import org.ecomapp.orderservice.models.OrderItem;
 import org.ecomapp.orderservice.models.SubOrder;
-import org.ecomapp.orderservice.clients.CartMSClient;
-import org.ecomapp.orderservice.clients.ProductMSClient;
-import org.ecomapp.orderservice.clients.UserMSClient;
 import org.ecomapp.orderservice.repositories.OrderItemRepository;
 import org.ecomapp.orderservice.repositories.OrderRepository;
 import org.ecomapp.orderservice.repositories.SubOrderRepository;
@@ -47,6 +49,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserMSClient userMSClient;
     private final CartMSClient cartMSClient;
     private final ProductMSClient productMSClient;
+    private final MessageProducer messageProducer;
 
     private static final Map<String, OrderStatus> STATUS_MAP = Map
             .of(
@@ -172,7 +175,6 @@ public class OrderServiceImpl implements OrderService {
                             variantMap.get(cartItem.getProductVariantId()).getSellerId()));
 
             List<SubOrder> subOrders = new ArrayList<>();
-            List<OrderItem> allItems = new ArrayList<>();
 
             for (Map.Entry<Long, List<CartItemDTO>> entry : itemsBySeller.entrySet()) {
 
@@ -206,7 +208,6 @@ public class OrderServiceImpl implements OrderService {
                 orderItemRepository.saveAll(subItems);
 
                 subOrders.add(subOrder);
-                allItems.addAll(subItems);
             }
 
             double totalAmount = subOrders.stream().mapToDouble(SubOrder::getSubTotal).sum();
@@ -215,12 +216,12 @@ public class OrderServiceImpl implements OrderService {
 
             orderRepository.save(order);
 
-            cartMSClient.clearCart(userId, cartId);
+            messageProducer.clearCartMessage(new ClearCartDTO(cartId, userId));
 
             return buildOrderResponse(order, subOrders);
 
         } catch (Exception e) {
-            productMSClient.releaseStock(reserveStockRequests);
+            messageProducer.releaseStockMessage(reserveStockRequests);
             throw e;
         }
     }
@@ -253,7 +254,7 @@ public class OrderServiceImpl implements OrderService {
             subOrder.setStatus(SubOrderStatus.CANCELLED);
         }
 
-        productMSClient.releaseStock(toRelease);
+        messageProducer.releaseStockMessage(toRelease);
 
         subOrderRepository.saveAll(subOrders);
 

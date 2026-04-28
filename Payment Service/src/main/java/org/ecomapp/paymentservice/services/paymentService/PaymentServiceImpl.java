@@ -6,6 +6,7 @@ import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.ecomapp.paymentservice.clients.OrderMSClient;
 import org.ecomapp.paymentservice.dtos.clientDTOs.OderDTOForPayment;
 import org.ecomapp.paymentservice.dtos.request.PaymentRequestDTO;
 import org.ecomapp.paymentservice.dtos.response.PaymentResponseDTO;
@@ -13,8 +14,9 @@ import org.ecomapp.paymentservice.enums.PaymentStatus;
 import org.ecomapp.paymentservice.exceptionHandling.customExceptions.ConflictException;
 import org.ecomapp.paymentservice.exceptionHandling.customExceptions.ResourceNotFoundException;
 import org.ecomapp.paymentservice.exceptionHandling.customExceptions.UnAuthorizedException;
+import org.ecomapp.paymentservice.messaging.ChangeOrderStatusDTO;
+import org.ecomapp.paymentservice.messaging.MessageProducer;
 import org.ecomapp.paymentservice.models.Payment;
-import org.ecomapp.paymentservice.clients.OrderMSClient;
 import org.ecomapp.paymentservice.repositories.PaymentRepository;
 import org.ecomapp.paymentservice.services.stripeService.StripeService;
 import org.ecomapp.paymentservice.utility.PaymentMapper;
@@ -33,6 +35,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
     private final OrderMSClient orderMSClient;
+    private final MessageProducer messageProducer;
 
     @Transactional
     @Override
@@ -87,7 +90,7 @@ public class PaymentServiceImpl implements PaymentService {
             payment.setPaidAt(LocalDateTime.now());
             paymentRepository.save(payment);
 
-            orderMSClient.changeStatus(payment.getOrderId(), "PAID");
+            messageProducer.changeOrderStatusMessage(new ChangeOrderStatusDTO(payment.getOrderId(), "PAID"));
 
         } else if ("payment_intent.payment_failed".equals(event.getType())) {
             String paymentIntentId = extractPaymentIntentId(event);

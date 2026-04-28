@@ -1,4 +1,14 @@
 services:
+
+  rabbitMQ:
+    container_name: rabbitMQ
+    image: rabbitmq:4.3.0-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - eCom-net
+
   postgres:
     container_name: postgres-container
     image: postgres:16

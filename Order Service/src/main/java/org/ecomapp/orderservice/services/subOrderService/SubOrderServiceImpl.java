@@ -10,10 +10,11 @@ import org.ecomapp.orderservice.enums.SubOrderStatus;
 import org.ecomapp.orderservice.exceptionHandling.customExceptions.ConflictException;
 import org.ecomapp.orderservice.exceptionHandling.customExceptions.ResourceNotFoundException;
 import org.ecomapp.orderservice.exceptionHandling.customExceptions.UnAuthorizedException;
+import org.ecomapp.orderservice.messaging.MessageProducer;
+import org.ecomapp.orderservice.messaging.UpdateTotalSalesDTO;
 import org.ecomapp.orderservice.models.Order;
 import org.ecomapp.orderservice.models.OrderItem;
 import org.ecomapp.orderservice.models.SubOrder;
-import org.ecomapp.orderservice.clients.UserMSClient;
 import org.ecomapp.orderservice.repositories.OrderItemRepository;
 import org.ecomapp.orderservice.repositories.OrderRepository;
 import org.ecomapp.orderservice.repositories.SubOrderRepository;
@@ -35,7 +36,7 @@ public class SubOrderServiceImpl implements SubOrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final UserMSClient userMSClient;
+    private final MessageProducer messageProducer;
 
 
     private static final Map<SubOrderStatus, Set<SubOrderStatus>> VALID_TRANSITIONS = Map.of(
@@ -110,7 +111,7 @@ public class SubOrderServiceImpl implements SubOrderService {
 //      TODO: seller service issue
         if (subOrderStatus.equals(SubOrderStatus.DELIVERED)) {
             Integer totalQuantityBySubOrder = getTotalQuantityBySubOrder(subOrder);
-            userMSClient.updateSellerTotalSales(sellerId, totalQuantityBySubOrder);
+            messageProducer.updateTotalSalesMessage(new UpdateTotalSalesDTO(sellerId, totalQuantityBySubOrder));
         }
 
         List<SubOrder> subOrders = subOrderRepository.findAllByOrderId(subOrder.getOrder().getId());

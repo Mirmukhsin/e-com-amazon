@@ -17,7 +17,4 @@ public interface ProductMSClient {
 
     @PostMapping("/products/variants/reserve")
     void reserveStock(@RequestBody List<ReserveStockRequest> request);
-
-    @PostMapping("/products/variants/release")
-    void releaseStock(@RequestBody List<ReserveStockRequest> request);
 }

@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# product image
+src/main/java/org/ecomapp/productservice/models/ProductImage.java
+src/main/java/org/ecomapp/productservice/controllers/ProductImageController.java
+src/main/java/org/ecomapp/productservice/repositories/ProductImageRepository.java
+src/main/java/org/ecomapp/productservice/dtos/request/ProductImageRequestDTO.java
+src/main/java/org/ecomapp/productservice/dtos/response/ProductImageResponseDTO.java
+src/main/java/org/ecomapp/productservice/services/productImageService/ProductImageService.java
+src/main/java/org/ecomapp/productservice/services/productImageService/ProductImageServiceImpl.java

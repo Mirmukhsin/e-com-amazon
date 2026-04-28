@@ -8,8 +8,8 @@ import org.ecomapp.userservice.dtos.response.UserResponseDTO;
 import org.ecomapp.userservice.enums.UserStatus;
 import org.ecomapp.userservice.exceptionHandling.customExceptions.ConflictException;
 import org.ecomapp.userservice.exceptionHandling.customExceptions.ResourceNotFoundException;
+import org.ecomapp.userservice.messaging.MessageProducer;
 import org.ecomapp.userservice.models.User;
-import org.ecomapp.userservice.clients.AuthMSClient;
 import org.ecomapp.userservice.repositories.UserRepository;
 import org.ecomapp.userservice.utility.UserMapper;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final AuthMSClient authMSClient;
+    private final MessageProducer messageProducer;
 
     @Override
     public UserResponseDTO getUserById(Long userId) {
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
         user.setDeletedAt(LocalDateTime.now());
 
         try {
-            authMSClient.disableUser(userId);
+            messageProducer.deleteUserMessage(user.getId());
         } catch (Exception e) {
             throw new ConflictException("Failing to disable user, - rolling back - %s".formatted(e));
         }
