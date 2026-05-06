@@ -12,8 +12,13 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     @Bean
-    public Queue orderProductQueue() {
-        return new Queue("Order-Product Queue");
+    public Queue orderProductReleaseQueue() {
+        return new Queue("Order-Product-release Queue");
+    }
+
+    @Bean
+    public Queue orderProductReserveQueue() {
+        return new Queue("Order-Product-reverse Queue");
     }
 
     @Bean

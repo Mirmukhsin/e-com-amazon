@@ -1,10 +1,7 @@
 package org.ecomapp.orderservice.exceptionHandling;
 
 import jakarta.servlet.http.HttpServletRequest;
-import org.ecomapp.orderservice.exceptionHandling.customExceptions.BadRequestException;
-import org.ecomapp.orderservice.exceptionHandling.customExceptions.ConflictException;
-import org.ecomapp.orderservice.exceptionHandling.customExceptions.ResourceNotFoundException;
-import org.ecomapp.orderservice.exceptionHandling.customExceptions.UnAuthorizedException;
+import org.ecomapp.orderservice.exceptionHandling.customExceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,8 +13,19 @@ import java.time.Instant;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ErrorResponseDTO> serviceUnavailable(ServiceUnavailableException ex, HttpServletRequest req) {
+        ErrorResponseDTO error = ErrorResponseDTO.builder()
+                .title("Service temporary unavailable")
+                .status(503)
+                .detail(ex.getMessage())
+                .path(req.getRequestURI())
+                .timestamp(Instant.now())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
-//    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseEntity<ErrorResponseDTO> handleNotFound(ResourceNotFoundException ex, HttpServletRequest req) {
         ErrorResponseDTO error = ErrorResponseDTO.builder()
                 .title("Resource not found")

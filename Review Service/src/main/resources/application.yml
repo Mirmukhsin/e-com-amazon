@@ -3,3 +3,7 @@ spring:
     name: review-service
   profiles:
     active: dev
+
+
+jwt:
+  internalSecretKey: ${JWT_INTERNAL_SECRET_KEY}

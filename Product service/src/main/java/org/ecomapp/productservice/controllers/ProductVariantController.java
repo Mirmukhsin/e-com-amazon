@@ -6,7 +6,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.ecomapp.productservice.dtos.ProductVariantDTO;
 import org.ecomapp.productservice.dtos.request.ProductVariantRequestDTO;
-import org.ecomapp.productservice.dtos.request.ReserveStockRequestDTO;
 import org.ecomapp.productservice.dtos.request.UpdateVariantRequestDTO;
 import org.ecomapp.productservice.dtos.response.ProductVariantResponseDTO;
 import org.ecomapp.productservice.services.productVariantService.ProductVariantService;
@@ -60,22 +59,6 @@ public class ProductVariantController {
     public ResponseEntity<Void> deleteVariant(@PathVariable Long variantId) {
         productVariantService.deleteVariant(variantId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
-    // TODO: Called by Order Service on checkout
-    @PostMapping("/reserve")
-    public ResponseEntity<Void> reserveStock(
-            @RequestBody List<ReserveStockRequestDTO> requests) {
-        productVariantService.reserveStock(requests);
-        return ResponseEntity.ok().build();
-    }
-
-    // TODO: Called by Order Service on cancellation or checkout failure
-    @PostMapping("/release")
-    public ResponseEntity<Void> releaseStock(
-            @RequestBody List<ReserveStockRequestDTO> requests) {
-        productVariantService.releaseStock(requests);
-        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/list")

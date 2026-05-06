@@ -14,7 +14,7 @@ import org.ecomapp.authservice.dtos.request.RegisterRequestDTO;
 import org.ecomapp.authservice.dtos.response.LoginResponseDTO;
 import org.ecomapp.authservice.dtos.response.UserResponseDTO;
 import org.ecomapp.authservice.exceptionHandling.ErrorResponseDTO;
-import org.ecomapp.authservice.jwtConfig.refreshToken.RefreshTokenRequestDTO;
+import org.ecomapp.authservice.securityConfig.jwtConfig.refreshToken.RefreshTokenRequestDTO;
 import org.ecomapp.authservice.services.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,6 +52,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO) {
+        System.err.println("Login.....");
         return new ResponseEntity<>(authService.login(loginRequestDTO), HttpStatus.OK);
     }
 

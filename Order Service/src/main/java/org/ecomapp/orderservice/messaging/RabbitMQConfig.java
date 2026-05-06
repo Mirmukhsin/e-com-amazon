@@ -18,8 +18,13 @@ public class RabbitMQConfig {
 
 
     @Bean
-    public Queue orderProductQueue() {
-        return new Queue("Order-Product Queue");
+    public Queue orderProductReserveQueue() {
+        return new Queue("Order-Product-reserve Queue");
+    }
+
+    @Bean
+    public Queue orderProductReleaseQueue() {
+        return new Queue("Order-Product-release Queue");
     }
 
     @Bean

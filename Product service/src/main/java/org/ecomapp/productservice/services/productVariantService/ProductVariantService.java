@@ -2,7 +2,7 @@ package org.ecomapp.productservice.services.productVariantService;
 
 import org.ecomapp.productservice.dtos.ProductVariantDTO;
 import org.ecomapp.productservice.dtos.request.ProductVariantRequestDTO;
-import org.ecomapp.productservice.dtos.request.ReserveStockRequestDTO;
+import org.ecomapp.productservice.dtos.request.StockRequestDTO;
 import org.ecomapp.productservice.dtos.request.UpdateVariantRequestDTO;
 import org.ecomapp.productservice.dtos.response.ProductVariantResponseDTO;
 
@@ -25,7 +25,7 @@ public interface ProductVariantService {
 
     void deleteVariant(Long variantId);
 
-    void reserveStock(List<ReserveStockRequestDTO> reserveStockRequests);
+    void reserveStock(List<StockRequestDTO> reserveStockRequests);
 
-    void releaseStock(List<ReserveStockRequestDTO> releaseStockRequests);
+    void releaseStock(List<StockRequestDTO> releaseStockRequests);
 }

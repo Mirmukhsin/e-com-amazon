@@ -3,13 +3,10 @@ package org.ecomapp.orderservice.services.orderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.ecomapp.orderservice.clients.CartMSClient;
-import org.ecomapp.orderservice.clients.ProductMSClient;
-import org.ecomapp.orderservice.clients.UserMSClient;
 import org.ecomapp.orderservice.dtos.clientsDTOs.CartItemDTO;
 import org.ecomapp.orderservice.dtos.clientsDTOs.OderDTOForPayment;
 import org.ecomapp.orderservice.dtos.clientsDTOs.ProductVariantDTO;
-import org.ecomapp.orderservice.dtos.clientsDTOs.ReserveStockRequest;
+import org.ecomapp.orderservice.dtos.clientsDTOs.StockRequest;
 import org.ecomapp.orderservice.dtos.clientsDTOs.addressDTOs.AddressDTO;
 import org.ecomapp.orderservice.dtos.clientsDTOs.addressDTOs.AddressSnapshotDTO;
 import org.ecomapp.orderservice.dtos.request.CheckoutRequestDTO;
@@ -29,6 +26,9 @@ import org.ecomapp.orderservice.models.SubOrder;
 import org.ecomapp.orderservice.repositories.OrderItemRepository;
 import org.ecomapp.orderservice.repositories.OrderRepository;
 import org.ecomapp.orderservice.repositories.SubOrderRepository;
+import org.ecomapp.orderservice.tolerance.CartGateway;
+import org.ecomapp.orderservice.tolerance.ProductGateway;
+import org.ecomapp.orderservice.tolerance.UserGateway;
 import org.ecomapp.orderservice.utility.OrderMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,9 +46,9 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final OrderMapper orderMapper;
     private final ObjectMapper objectMapper;
-    private final UserMSClient userMSClient;
-    private final CartMSClient cartMSClient;
-    private final ProductMSClient productMSClient;
+    private final UserGateway userGateway;
+    private final CartGateway cartGateway;
+    private final ProductGateway productGateway;
     private final MessageProducer messageProducer;
 
     private static final Map<String, OrderStatus> STATUS_MAP = Map
@@ -121,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDTO createOrder(Long userId, CheckoutRequestDTO checkoutRequestDTO) {
         Long cartId = checkoutRequestDTO.getCartId();
 
-        AddressDTO addressDTO = userMSClient.getById(userId, checkoutRequestDTO.getAddressId());
+        AddressDTO addressDTO = userGateway.getById(userId, checkoutRequestDTO.getAddressId());
         String addressJson;
         try {
             AddressSnapshotDTO addressSnapshotDTO = orderMapper.addressSnapshotFromAddressDTO(addressDTO);
@@ -130,7 +130,7 @@ public class OrderServiceImpl implements OrderService {
             throw new ConflictException("Failed to serialize address");
         }
 
-        List<CartItemDTO> cartItems = cartMSClient.getItemsByCartId(cartId);
+        List<CartItemDTO> cartItems = cartGateway.getItemsByCartId(cartId);
 
         if (cartItems.isEmpty()) {
             throw new ConflictException("Cart is empty");
@@ -140,12 +140,12 @@ public class OrderServiceImpl implements OrderService {
                 .map(CartItemDTO::getProductVariantId)
                 .collect(Collectors.toSet());
 
-        List<ProductVariantDTO> variants = productMSClient.getAllByIds(variantIds);
+        List<ProductVariantDTO> variants = productGateway.getAllByIds(variantIds);
 
         Map<Long, ProductVariantDTO> variantMap = variants.stream()
                 .collect(Collectors.toMap(ProductVariantDTO::getId, v -> v));
 
-        List<ReserveStockRequest> reserveStockRequests = cartItems.stream()
+        List<StockRequest> stockRequests = cartItems.stream()
                 .map(item -> {
 
                     ProductVariantDTO variant = variantMap.get(item.getProductVariantId());
@@ -154,12 +154,12 @@ public class OrderServiceImpl implements OrderService {
                         throw new ResourceNotFoundException("Variant not found");
                     }
 
-                    return new ReserveStockRequest(variant.getId(), item.getQuantity());
+                    return new StockRequest(variant.getId(), item.getQuantity());
                 })
                 .toList();
 
         try {
-            productMSClient.reserveStock(reserveStockRequests);
+            messageProducer.reserveStockMessage(stockRequests);
 
             Order order = Order.builder()
                     .buyerId(userId)
@@ -221,7 +221,7 @@ public class OrderServiceImpl implements OrderService {
             return buildOrderResponse(order, subOrders);
 
         } catch (Exception e) {
-            messageProducer.releaseStockMessage(reserveStockRequests);
+            messageProducer.releaseStockMessage(stockRequests);
             throw e;
         }
     }
@@ -242,14 +242,14 @@ public class OrderServiceImpl implements OrderService {
 
         List<SubOrder> subOrders = subOrderRepository.findAllByOrderId(orderId);
 
-        List<ReserveStockRequest> toRelease = new ArrayList<>();
+        List<StockRequest> toRelease = new ArrayList<>();
 
         for (SubOrder subOrder : subOrders) {
 
             List<OrderItem> orderItems = orderItemRepository.findAllBySubOrder_Id(subOrder.getId());
 
             orderItems.forEach(item -> toRelease.add(
-                    new ReserveStockRequest(item.getProductVariantId(), item.getQuantity())));
+                    new StockRequest(item.getProductVariantId(), item.getQuantity())));
 
             subOrder.setStatus(SubOrderStatus.CANCELLED);
         }

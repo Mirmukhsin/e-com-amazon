@@ -6,7 +6,6 @@ import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.ecomapp.paymentservice.clients.OrderMSClient;
 import org.ecomapp.paymentservice.dtos.clientDTOs.OderDTOForPayment;
 import org.ecomapp.paymentservice.dtos.request.PaymentRequestDTO;
 import org.ecomapp.paymentservice.dtos.response.PaymentResponseDTO;
@@ -19,6 +18,7 @@ import org.ecomapp.paymentservice.messaging.MessageProducer;
 import org.ecomapp.paymentservice.models.Payment;
 import org.ecomapp.paymentservice.repositories.PaymentRepository;
 import org.ecomapp.paymentservice.services.stripeService.StripeService;
+import org.ecomapp.paymentservice.tolerance.OrderGateway;
 import org.ecomapp.paymentservice.utility.PaymentMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -34,13 +34,13 @@ public class PaymentServiceImpl implements PaymentService {
     private final StripeService stripeService;
     private final PaymentRepository paymentRepository;
     private final PaymentMapper paymentMapper;
-    private final OrderMSClient orderMSClient;
+    private final OrderGateway orderGateway;
     private final MessageProducer messageProducer;
 
     @Transactional
     @Override
     public PaymentResponseDTO initiatePayment(Long userId, Long orderId, PaymentRequestDTO paymentRequestDTO) {
-        OderDTOForPayment order = orderMSClient.getOrder(orderId);
+        OderDTOForPayment order = orderGateway.getOrder(orderId);
 
         if (!order.getBuyerId().equals(userId)) {
             throw new UnAuthorizedException("Unauthorized");

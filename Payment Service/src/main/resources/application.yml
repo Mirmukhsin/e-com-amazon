@@ -9,5 +9,61 @@ spring:
   rabbitmq:
     host: localhost
     port: 5672
-    username: guest
-    password: guest
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+# Actuator
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+  health:
+    circuitbreakers:
+      enabled: true
+
+# Resilience4J
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        register-health-indicator: true
+        sliding-window-type: count_based
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        automatic-transition-from-open-to-half-open-enabled: true
+    instances:
+      orderService:
+        base-config: default
+
+  #        retry
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 2s
+    instances:
+      orderService:
+        base-config: default
+
+  #       rate limiter
+  ratelimiter:
+    configs:
+      default:
+        timeout-duration: 0
+        limit-refresh-period: 4
+        limit-for-period: 2
+    instances:
+      orderService:
+        base-config: default
+
+jwt:
+  internalSecretKey: ${JWT_INTERNAL_SECRET_KEY}

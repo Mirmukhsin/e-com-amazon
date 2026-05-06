@@ -1,7 +1,7 @@
 package org.ecomapp.authservice.services;
 
 import org.ecomapp.authservice.dtos.request.LogoutRequestDTO;
-import org.ecomapp.authservice.jwtConfig.refreshToken.RefreshTokenRequestDTO;
+import org.ecomapp.authservice.securityConfig.jwtConfig.refreshToken.RefreshTokenRequestDTO;
 import org.ecomapp.authservice.dtos.request.LoginRequestDTO;
 import org.ecomapp.authservice.dtos.request.RegisterRequestDTO;
 import org.ecomapp.authservice.dtos.response.LoginResponseDTO;

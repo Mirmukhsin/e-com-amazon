@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.ecomapp.apigateway.internal.InternalTokenGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -21,8 +22,11 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    public JwtAuthenticationFilter() {
+    private final InternalTokenGenerator internalTokenGenerator;
+
+    public JwtAuthenticationFilter(InternalTokenGenerator internalTokenGenerator) {
         super(Config.class);
+        this.internalTokenGenerator = internalTokenGenerator;
     }
 
     @Override
@@ -37,31 +41,35 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             try {
                 String token = authHeader.substring(7);
 
-                if (token.isEmpty()){
+                if (token.isEmpty()) {
                     return sendUnauthorized(exchange);
                 }
 
-                Claims claims = Jwts.parserBuilder()
-                        .setSigningKey(getSigningKey())
+                Claims claims = Jwts.parser()
+                        .verifyWith(getSigningKey())
                         .build()
-                        .parseClaimsJws(token)
-                        .getBody();
+                        .parseSignedClaims(token)
+                        .getPayload();
 
                 String email = claims.getSubject();
                 Long userId = claims.get("userId", Long.class);
                 List<String> roles = claims.get("roles", List.class);
+
+                String internalToken = internalTokenGenerator.generate(userId, "tenantA", roles);
 
                 ServerWebExchange modifiedExchange = exchange.mutate().request(
                         exchange.getRequest().mutate()
                                 .header("X-User-Id", String.valueOf(userId))
                                 .header("X-User-Email", email)
                                 .header("X-User-Roles", roles != null ? String.join(",", roles) : "")
+                                .header("X-Internal-Auth", internalToken)
                                 .build()
                 ).build();
 
                 return chain.filter(modifiedExchange);
 
             } catch (Exception e) {
+                System.err.println("EXXXXXXXXXXX");
                 return sendUnauthorized(exchange);
             }
         };
@@ -73,6 +81,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
     }
 
     private Mono<Void> sendUnauthorized(ServerWebExchange exchange) {
+        System.err.println("Send Unauthorized:    ?????");
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         return exchange.getResponse().setComplete();
     }

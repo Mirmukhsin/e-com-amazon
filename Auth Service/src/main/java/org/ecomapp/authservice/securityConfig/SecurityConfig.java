@@ -1,7 +1,7 @@
 package org.ecomapp.authservice.securityConfig;
 
 import lombok.RequiredArgsConstructor;
-import org.ecomapp.authservice.jwtConfig.JWTAuthFilter;
+import org.ecomapp.authservice.securityConfig.jwtConfig.JWTAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

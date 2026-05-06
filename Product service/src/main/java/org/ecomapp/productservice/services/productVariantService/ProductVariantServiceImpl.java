@@ -4,7 +4,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.ecomapp.productservice.dtos.ProductVariantDTO;
 import org.ecomapp.productservice.dtos.request.ProductVariantRequestDTO;
-import org.ecomapp.productservice.dtos.request.ReserveStockRequestDTO;
+import org.ecomapp.productservice.dtos.request.StockRequestDTO;
 import org.ecomapp.productservice.dtos.request.UpdateVariantRequestDTO;
 import org.ecomapp.productservice.dtos.response.ProductVariantResponseDTO;
 import org.ecomapp.productservice.exceptionHandling.customExceptions.ConflictException;
@@ -106,8 +106,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     @Transactional
     @Override
-    public void reserveStock(List<ReserveStockRequestDTO> requests) {
-        for (ReserveStockRequestDTO req : requests) {
+    public void reserveStock(List<StockRequestDTO> requests) {
+        for (StockRequestDTO req : requests) {
             ProductVariant variant = productVariantRepository.findById(req.getVariantId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Variant not found: " + req.getVariantId()));
@@ -125,8 +125,8 @@ public class ProductVariantServiceImpl implements ProductVariantService {
 
     @Transactional
     @Override
-    public void releaseStock(List<ReserveStockRequestDTO> requests) {
-        for (ReserveStockRequestDTO req : requests) {
+    public void releaseStock(List<StockRequestDTO> requests) {
+        for (StockRequestDTO req : requests) {
             ProductVariant variant = productVariantRepository.findById(req.getVariantId())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Variant not found: " + req.getVariantId()));
